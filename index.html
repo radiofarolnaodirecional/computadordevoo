@@ -12,7 +12,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: black;
+            background-color: #181c21;
             overflow: hidden;
         }
 
@@ -145,31 +145,69 @@
             transition: 200ms;
         }
 
+        #container {
+            width: 90vw;
+            height: 88vh;
+            background-color: #13161B;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgb(48, 74, 61);
+            border-radius: 1rem;
+        }
+
+        #content {
+            min-width: 100%;
+            background-color: #13161B;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: transform 70ms;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
     </style>
 </head>
 <body>
 
-    <button style="margin: 1rem;" onclick="chancgeside()">change side</button>
+    <button style="margin: 1rem;
+                   color: whitesmoke;
+                   background-color: rgb(195, 94, 60);
+                   border: 1px solid rgba(213, 152, 31, 0.453);
+                   border-radius: 7px;
+                   padding: 0.2rem 1rem;
+                   font-family: sans-serif;
+                   font-weight: bold;
+    " onclick="chancgeside()">Virar</button>
 
-    <div class="compvoocalc">
-        <div class="compvoocalcfg rotatecalc"></div>
-    </div>
+    <div id="container">
+
+        <div id="content">
+
+            <div class="compvoocalc">
+                <div class="compvoocalcfg rotatecalc"></div>
+            </div>
 
 
-    <div class="compvoowind" style="display: none;">
-        <div class="compvoowindbg">
+            <div class="compvoowind" style="display: none;">
+                <div class="compvoowindbg">
 
-            <div class="compborder"></div>
+                    <div class="compborder"></div>
 
-            <div class="drgb-updn"></div>
+                    <div class="drgb-updn"></div>
 
-            <div class="compvoowindfg rotate">
-                <div class="rotate-dragb"></div>
-                <div class="compborder2"></div>
-                <div class="fg-markable"></div>
+                    <div class="compvoowindfg rotate">
+                        <div class="rotate-dragb"></div>
+                        <div class="compborder2"></div>
+                        <div class="fg-markable"></div>
+                    </div>
+
+                </div>
             </div>
 
         </div>
+
     </div>
 
     <!-- <input type="range" min="0" max="360" value="0" onchange="document.querySelector('.compvoowindfg').style.transform = 'rotate(' + this.value + 'deg)';">
@@ -391,6 +429,62 @@ function chancgeside(){
 
     chancgesidebl = !chancgesidebl
 }
+
+
+
+
+
+// Prevenção do movimento do conteúdo quando interage com os elementos rotativos e de arrastar
+
+// Função para prevenir a propagação dos eventos de arrastar e girar
+const preventEventPropagation = (element) => {
+    element.addEventListener('mousedown', (e) => e.stopPropagation());
+    element.addEventListener('touchstart', (e) => e.stopPropagation());
+};
+
+// Aplica a prevenção de propagação para os elementos rotativos e de arrastar
+preventEventPropagation(document.querySelector('.rotate-dragb'));
+preventEventPropagation(document.querySelector('.drgb-updn'));
+preventEventPropagation(document.querySelector('.rotatecalc'));
+
+// Função de arrastar e zoom do container
+const container = document.getElementById('container');
+const content = document.getElementById('content');
+
+let isDragging = false;
+let startX, startY, scrollX = 0, scrollY = 0;
+let scale = 1;
+
+// Função para manipular o arrastar
+container.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    startX = e.clientX - scrollX;
+    startY = e.clientY - scrollY;
+});
+
+container.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    scrollX = e.clientX - startX;
+    scrollY = e.clientY - startY;
+    content.style.transform = `translate(${scrollX}px, ${scrollY}px) scale(${scale})`;
+});
+
+container.addEventListener('mouseup', () => {
+    isDragging = false;
+});
+
+container.addEventListener('mouseleave', () => {
+    isDragging = false;
+});
+
+// Função para manipular o zoom com o scroll
+container.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    scale += e.deltaY * -0.001;
+    scale = Math.min(Math.max(0.5, scale), 2); // Limitar o zoom entre 50% e 200%
+    content.style.transform = `translate(${scrollX}px, ${scrollY}px) scale(${scale})`;
+});
+
 
 
 </script>
