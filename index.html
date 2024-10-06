@@ -34,6 +34,7 @@
             background-size: cover;
             transition: 0;
             background-color: rgba(0, 128, 0, 0);
+            pointer-events: none;
         }
 
         .compvoowind{
@@ -90,20 +91,6 @@
             border-radius: 100%;
             cursor: grab;
             pointer-events: auto;
-        }
-
-        .fg-markable{
-            width: 45%;
-            height: 45%;
-            background-color: rgba(123, 255, 0, 0);
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translateY(-50%) translateX(-50%);
-            border-radius: 100%;
-            pointer-events: auto;
-            cursor: crosshair;
-            backdrop-filter: blur(0.5px);
         }
 
         .point {
@@ -167,6 +154,33 @@
             align-items: center;
         }
 
+        .rotatecalc-dragb{
+            width: 30rem;
+            height: 30rem;
+            background-color: rgba(255, 0, 0, 0);
+            position: absolute;
+            inset: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            cursor: grab;
+            pointer-events: auto;
+        }
+
+        .fg-markable{
+            width: 45%;
+            height: 45%;
+            background-color: rgba(123, 255, 0, 0.016);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translateY(-50%) translateX(-50%);
+            border-radius: 100%;
+            pointer-events: auto;
+            cursor: crosshair;
+            backdrop-filter: blur(0.5px);
+            transform-origin: center;
+        }
+
     </style>
 </head>
 <body>
@@ -186,7 +200,9 @@
         <div id="content">
 
             <div class="compvoocalc">
-                <div class="compvoocalcfg rotatecalc"></div>
+                <div class="compvoocalcfg rotatecalc">
+                    <div class="rotatecalc-dragb"></div>
+                </div>
             </div>
 
 
@@ -200,7 +216,7 @@
                     <div class="compvoowindfg rotate">
                         <div class="rotate-dragb"></div>
                         <div class="compborder2"></div>
-                        <div class="fg-markable"></div>
+                        <canvas class="fg-markable"></canvas>
                     </div>
 
                 </div>
@@ -215,6 +231,9 @@
 
 
 <script>
+
+const content = document.getElementById('content');
+
 const rotate = (EL) => {
       let ang = 0; // Ângulo inicial em radianos
       let angStart = 0;
@@ -248,7 +267,7 @@ const rotate = (EL) => {
       const endRotation = () => {
         isStart = false; 
       };
-
+      
       // Adiciona eventos de clique na área rotativa (rotate-dragb)
       const dragElement = EL.querySelector('.rotate-dragb');
 
@@ -262,7 +281,7 @@ const rotate = (EL) => {
       document.addEventListener("touchmove", rotateElement);
       document.addEventListener("touchend", endRotation);
     };
-
+    
     // Aplica a função de rotação no elemento com classe 'rotate'
     document.querySelectorAll(".rotate").forEach(rotate);
 
@@ -311,31 +330,45 @@ moveElementVertically(document.querySelector('.drgb-updn'), document.querySelect
 
 
 
-const drawingArea = document.querySelector('.fg-markable');
+const windcanvas = document.querySelector('.fg-markable');
+const windcanvasctx = windcanvas.getContext('2d');
 
-drawingArea.addEventListener('click', function(event) {
-  // Remove o ponto anterior, se houver
-  const existingPoint = drawingArea.querySelector('.point');
-  if (existingPoint) {
-    drawingArea.removeChild(existingPoint);
-  }
-  
-  // Calcula a posição do clique relativa à div usando getBoundingClientRect
-  const rect = drawingArea.getBoundingClientRect();
-  const x = event.clientX - rect.left;
-  const y = event.clientY - rect.top;
-  
-  // Cria um novo elemento de ponto
-  const point = document.createElement('div');
-  point.classList.add('point');
-  
-  // Define a posição do ponto
-  point.style.left = `${x}px`;
-  point.style.top = `${y}px`;
+// Função para ajustar o tamanho do canvas
+function resizeCanvas() {
+    const rect = windcanvas.getBoundingClientRect();
+    windcanvas.width = rect.width; // Ajusta a largura
+    windcanvas.height = rect.height; // Ajusta a altura
+    windcanvasctx.clearRect(0, 0, windcanvas.width, windcanvas.height); // Limpa o canvas após redimensionar
+}
 
-  // Adiciona o ponto na div
-  drawingArea.appendChild(point);
+// Redimensionar o canvas na inicialização e ao redimensionar a janela
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas(); // Chama ao carregar a página
+
+// Função de desenho que desenha um ponto onde o mouse é clicado
+windcanvas.addEventListener('mousedown', (event) => {
+    // Limpa o canvas antes de desenhar um novo ponto
+    windcanvasctx.clearRect(0, 0, windcanvas.width, windcanvas.height); // Limpa o canvas
+
+    // Pegar as coordenadas do mouse
+    const rect = windcanvas.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / scale; // Ajuste aqui
+    const y = (event.clientY - rect.top) / scale; // Ajuste aqui
+
+    // Desenhar o ponto
+    windcanvasctx.fillStyle = 'green'; // Cor do ponto
+    windcanvasctx.beginPath();
+    windcanvasctx.arc(x, y, 3 / scale, 0, Math.PI * 2); // Raio ajustado
+    windcanvasctx.fill(); // Preencher o ponto
 });
+
+
+
+
+
+
+
+
 
 
 
@@ -399,29 +432,34 @@ const rotatecalc = (EL) => {
     isStart = false; 
   };
 
-  // Eventos de mouse
-  EL.addEventListener("mousedown", startRotation);
+  // Adiciona eventos de clique na área rotativa (rotate-dragb)
+  const dragElement = EL.querySelector('.rotatecalc-dragb');
+
+  // Eventos de mouse para a rotação
+  dragElement.addEventListener("mousedown", startRotation);
   document.addEventListener("mousemove", rotateElement);
   document.addEventListener("mouseup", endRotation);
 
   // Eventos de toque para dispositivos móveis
-  EL.addEventListener("touchstart", startRotation);
+  dragElement.addEventListener("touchstart", startRotation);
   document.addEventListener("touchmove", rotateElement);
   document.addEventListener("touchend", endRotation);
 };
 
-// Seleciona todos os elementos com a classe 'rotate' e aplica a função de rotação
+// Aplica a função de rotação no elemento .compvoocalcfg
 document.querySelectorAll(".rotatecalc").forEach(rotatecalc);
+
 
 
 
 var chancgesidebl = true
 
 function chancgeside(){
-
+    
     if (chancgesidebl) {
         document.querySelector('.compvoocalc').style.display = 'none'
         document.querySelector('.compvoowind').style.display = 'block'
+        resizeCanvas()
     }else{
         document.querySelector('.compvoocalc').style.display = 'block'
         document.querySelector('.compvoowind').style.display = 'none'
@@ -446,14 +484,18 @@ const preventEventPropagation = (element) => {
 preventEventPropagation(document.querySelector('.rotate-dragb'));
 preventEventPropagation(document.querySelector('.drgb-updn'));
 preventEventPropagation(document.querySelector('.rotatecalc'));
+preventEventPropagation(document.querySelector('.fg-markable'));
 
 // Função de arrastar e zoom do container
 const container = document.getElementById('container');
-const content = document.getElementById('content');
 
 let isDragging = false;
 let startX, startY, scrollX = 0, scrollY = 0;
 let scale = 1;
+
+
+
+
 
 // Função para manipular o arrastar
 container.addEventListener('mousedown', (e) => {
@@ -487,6 +529,7 @@ container.addEventListener('wheel', (e) => {
 
 
 
+      
 </script>
 
 </body>
